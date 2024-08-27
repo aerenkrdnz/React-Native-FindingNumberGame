@@ -1,51 +1,57 @@
-import { StyleSheet, Text, View, Alert } from 'react-native';
+import { StyleSheet, Text, View, Alert, FlatList } from 'react-native';
 import React, { useEffect,useState } from 'react';
 import Title from '../components/Title';
 import ComputerNumber from '../components/ComputerNumber.js';
 import CustomButton from "../components/CustomButton.js";
 import AntDesign from '@expo/vector-icons/AntDesign';
+import ComputerGuess from '../components/ComputerGuess.js';
 
 let minNumber = 1;
 let maxNumber = 100;
 
 export default function GameScreen({userNumber,onGameOver}) {
   const initialGuess = generateNumber(1, 100, userNumber);
-  const [currentGuess, setCurrentGuess] = useState(initialGuess)
+  const [currentGuess, setCurrentGuess] = useState(initialGuess);
+  const [guessCounts, setGuessCounts] = useState([initialGuess]);
 
- useEffect(()=>{
-  if(currentGuess === userNumber){
-    onGameOver();
-  }
- },[currentGuess,userNumber,onGameOver]);
+  useEffect(() => {
+    if (currentGuess === userNumber) {
+      onGameOver(guessCounts.length);
+    }
+  }, [currentGuess, userNumber, onGameOver]);
 
-  function nextGuessHandler(direction){
+  useEffect(() =>{
+    let minNumber = 1;
+    let maxNumber = 100;
+  },[])
 
+  function nextGuessHandler(direction) {
     if (
       (direction === "lower" && currentGuess < userNumber) ||
       (direction === "greater" && currentGuess > userNumber)
-    ){
+    ) {
       Alert.alert("Yanlış!", "Yanlış olduğunu bile bile basıyorsun!...", [
         { text: "Tamam", style: "cancel" },
       ]);
       return;
     }
 
-      if (direction === "lower") {
-        maxNumber = currentGuess;
-      } else {
-        minNumber = currentGuess + 1;
-      }
+    if (direction === "lower") {
+      maxNumber = currentGuess;
+    } else {
+      minNumber = currentGuess + 1;
+    }
     const newRandomNumber = generateNumber(minNumber, maxNumber, currentGuess);
     setCurrentGuess(newRandomNumber);
+    setGuessCounts((prevGuess) => [newRandomNumber, ...prevGuess]);
   }
 
-  function generateNumber(min,max,exclude){
+  function generateNumber(min, max, exclude) {
     const randomNumber = Math.floor(Math.random() * (max - min)) + min;
 
-    if(randomNumber === exclude){
-      randomNumber(min,max,exclude)
-    }
-    else{
+    if (randomNumber === exclude) {
+      randomNumber(min, max, exclude);
+    } else {
       return randomNumber;
     }
   }
@@ -64,6 +70,17 @@ export default function GameScreen({userNumber,onGameOver}) {
           </CustomButton>
         </View>
       </View>
+      <View style={styles.listContainer}>
+        <FlatList 
+        data={guessCounts}
+        keyExtractor={(itemData)=>itemData}
+        renderItem={(itemData) => (
+          <ComputerGuess roundNumber={guessCounts.length - itemData.index}
+          guess={itemData.item}/>
+
+        )}
+        />
+      </View>
     </View>
   );
 }
@@ -71,9 +88,8 @@ export default function GameScreen({userNumber,onGameOver}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 30,
+    margin: 15,
+    padding: 40,
   },
   buttonsContainer: {
     flexDirection: "row",
@@ -91,12 +107,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 4,
-    borderRadius:20,
-    alignItems:'center'
+    borderRadius: 20,
+    alignItems: "center",
   },
-  title:{
-    color:'white',
-    fontSize:20,
-    marginBottom:15,
+  title: {
+    color: "white",
+    fontSize: 20,
+    marginBottom: 15,
+  },
+  listContainer:{
+    flex:1,
+    marginTop:10
   }
 });
